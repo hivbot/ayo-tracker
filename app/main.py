@@ -10,8 +10,8 @@ from fastapi.responses import JSONResponse
 
 
 
-AYO_WHATSAPP_API = os.environ.get('AYO_WHATSAPP_API')
-PHONE_NUMBER_ID = os.environ.get('PHONE_NUMBER_ID')
+#AYO_WHATSAPP_API = os.environ.get('AYO_WHATSAPP_API')
+#PHONE_NUMBER_ID = os.environ.get('PHONE_NUMBER_ID')
 
 app = FastAPI()
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
@@ -75,20 +75,20 @@ async def delete_scheduler(delete_input: BaseInput):
 
 
 
-#def call_intent_endpoint(user_id, intent_name, query_value=""):
-#    try:
-#        payload = {
-#            'user_id': user_id,
-#            'intent_name': intent_name,
-#            'query_value': query_value,
-#            'phone_number_id': PHONE_NUMBER_ID,
-#            'user_name': "Ayo Scheduler"
-#        }
-#        response = requests.post(AYO_WHATSAPP_API + '/intent', json=payload)
-#        if response.status_code == 200:
-#            logger.info('Request successful')
-#        else:
-#            logger.error('Request failed with status code: %d', response.status_code)
-#        
-#    except Exception as e:
-#        logger.error('Error: %s', e)
+def call_intent_endpoint(user_id, intent_name, query_value=""):
+    try:
+        payload = {
+            'user_id': user_id,
+            'intent_name': intent_name,
+            'query_value': query_value,
+            'phone_number_id': PHONE_NUMBER_ID,
+            'user_name': "Ayo Scheduler"
+        }
+        response = requests.post(AYO_WHATSAPP_API + '/intent', json=payload)
+        if response.status_code == 200:
+            logger.info('Request successful')
+        else:
+            logger.error('Request failed with status code: %d', response.status_code)
+        
+    except Exception as e:
+        logger.error('Error: %s', e)
