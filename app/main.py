@@ -1,7 +1,7 @@
 import os
 import requests
 import logging
-import ayo_scheduler as ayo_scheduler
+import app.ayo_scheduler as ayo_scheduler
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
