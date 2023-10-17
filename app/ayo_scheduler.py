@@ -79,7 +79,9 @@ def set_ayo_scheduler(
                 minute = appDateTime.minute,
                 second = appDateTime.second,
                 args = (user_id, intent_name, query_value),
+                misfire_grace_time=30,
                 id = scheduler_id,
+                replace_existing=True
             )
             #background_scheduler.start()
 
@@ -101,6 +103,29 @@ def set_ayo_scheduler(
                 minute = appDateTime.minute,
                 second = appDateTime.second,
                 args = (user_id, intent_name, query_value),
+                misfire_grace_time=30,
+                id = scheduler_id,
+            )
+
+        elif query_value == "s": #snooze
+            appDateTime = format_timestamp_to_cron(exec_time)
+            #jobstores = {'default': MongoDBJobStore(
+            #database="Ayo", collection="scheduler", host=AYO_MONGODB_CONNECTION_STRING
+            #)}
+            #executors = {'default': ThreadPoolExecutor(20)}
+            #timezone = pytz.timezone('Europe/Zurich')
+            #background_scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, timezone=timezone)
+            Async_Sched_Ayo.add_job(
+                call_intent_endpoint,
+                'cron',
+                year = appDateTime.year,
+                month = appDateTime.month,
+                day = appDateTime.day,
+                hour = appDateTime.hour,
+                minute = appDateTime.minute,
+                second = appDateTime.second,
+                args = (user_id, intent_name, query_value),
+                misfire_grace_time=30,
                 id = scheduler_id,
             )
             #background_scheduler.start()

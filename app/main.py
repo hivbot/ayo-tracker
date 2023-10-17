@@ -21,10 +21,11 @@ logger = logging.getLogger(__name__)
 class BaseInput(BaseModel):
     user_id: str
     intent_name: str
+    query_value: Optional[str] = None
+
 
 class SchedulerInput(BaseInput):
     time_point: str
-    query_value: Optional[str] = None
 
 @app.post("/v1")
 async def post_scheduler(scheduler_input: SchedulerInput):
@@ -40,7 +41,7 @@ async def post_scheduler(scheduler_input: SchedulerInput):
         logger.info("time_point: %s", time_point)
         logger.info("query_value: %s", query_value)
 
-        scheduler_id = user_id + intent_name
+        scheduler_id = user_id + intent_name + query_value
         logger.info("scheduler_id: %s", scheduler_id)
         
         ayo_scheduler.set_ayo_scheduler(time_point,query_value,intent_name,user_id,scheduler_id)
@@ -56,14 +57,14 @@ async def delete_scheduler(delete_input: BaseInput):
     try:
         user_id = delete_input.user_id
         intent_name = delete_input.intent_name
-        #query_value = delete_input.query_value
+        query_value = delete_input.query_value
 
         logger.info("Received scheduler delete request:")
         logger.info("user_id: %s", user_id)
         logger.info("intent_name: %s", intent_name)
-        #logger.info("query_value: %s", query_value)
+        logger.info("query_value: %s", query_value)
         
-        scheduler_id = user_id + intent_name
+        scheduler_id = user_id + intent_name + query_value
         logger.info("scheduler_id: %s", scheduler_id)
 
         ayo_scheduler.delete_ayo_scheduler(scheduler_id)
