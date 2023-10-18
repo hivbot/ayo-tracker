@@ -19,17 +19,6 @@ PHONE_NUMBER_ID = os.environ["PHONE_NUMBER_ID"]
 AYO_MONGODB_CONNECTION_STRING = os.environ["AYO_MONGODB_CONNECTION_STRING"]
 
 
-logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
-logger = logging.getLogger(__name__)
-
-jobstores = {'default': MongoDBJobStore(
-        database="Ayo", collection="scheduler", host=os.environ["AYO_MONGODB_CONNECTION_STRING"]
-    )}
-
-executors = {'default': ThreadPoolExecutor(20)}
-
-timezone = pytz.timezone('Europe/Zurich')
-
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
 logger = logging.getLogger(__name__)
@@ -40,7 +29,7 @@ jobstores = {'default': MongoDBJobStore(
 
 executors = {'default': ThreadPoolExecutor(20)}
 
-timezone = pytz.timezone('Europe/Zurich')
+timezone = pytz.timezone('Africa/Lagos')
 
 Async_Sched_Ayo = AsyncIOScheduler(jobstores=jobstores, executors=executors, timezone=timezone)
 Async_Sched_Ayo.start()
@@ -63,12 +52,6 @@ def set_ayo_scheduler(
     try:
         if query_value == "m": #medication
             appDateTime = format_timestamp_to_cron(exec_time)
-            #jobstores = {'default': MongoDBJobStore(
-            #database="Ayo", collection="scheduler", host=AYO_MONGODB_CONNECTION_STRING
-            #)}
-            #executors = {'default': ThreadPoolExecutor(20)}
-            #timezone = pytz.timezone('Europe/Zurich')
-            #background_scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, timezone=timezone)
             Async_Sched_Ayo.add_job(
                 call_intent_endpoint,
                 'cron',
@@ -83,16 +66,10 @@ def set_ayo_scheduler(
                 id = scheduler_id,
                 replace_existing=True
             )
-            #background_scheduler.start()
+
 
         elif query_value == "a": #appointment
             appDateTime = format_timestamp_to_cron(exec_time)
-            #jobstores = {'default': MongoDBJobStore(
-            #database="Ayo", collection="scheduler", host=AYO_MONGODB_CONNECTION_STRING
-            #)}
-            #executors = {'default': ThreadPoolExecutor(20)}
-            #timezone = pytz.timezone('Europe/Zurich')
-            #background_scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, timezone=timezone)
             Async_Sched_Ayo.add_job(
                 call_intent_endpoint,
                 'cron',
@@ -109,12 +86,6 @@ def set_ayo_scheduler(
 
         elif query_value == "s": #snooze
             appDateTime = format_timestamp_to_cron(exec_time)
-            #jobstores = {'default': MongoDBJobStore(
-            #database="Ayo", collection="scheduler", host=AYO_MONGODB_CONNECTION_STRING
-            #)}
-            #executors = {'default': ThreadPoolExecutor(20)}
-            #timezone = pytz.timezone('Europe/Zurich')
-            #background_scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, timezone=timezone)
             Async_Sched_Ayo.add_job(
                 call_intent_endpoint,
                 'cron',
@@ -128,7 +99,7 @@ def set_ayo_scheduler(
                 misfire_grace_time=30,
                 id = scheduler_id,
             )
-            #background_scheduler.start()
+
 
     except Exception as e:
         logger.error('Error: %s', e)
@@ -154,10 +125,6 @@ def call_intent_endpoint(user_id, intent_name, query_value=""):
 
 def check_ayo_scheduler(sch_id):
     try: 
-        #jobstores = {'default': MongoDBJobStore(database="Ayo", collection="scheduler", host=AYO_MONGODB_CONNECTION_STRING)}
-        #executors = {'default': ThreadPoolExecutor(20)}
-        #timezone = pytz.timezone('Europe/Zurich')
-        #background_scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, timezone=timezone)
         print(Async_Sched_Ayo.get_job(sch_id))
 
     except Exception as e:
@@ -165,13 +132,7 @@ def check_ayo_scheduler(sch_id):
 
 def delete_ayo_scheduler(sched_id):
     try:
-        #jobstores = {'default': MongoDBJobStore(database="Ayo", collection="scheduler", host=AYO_MONGODB_CONNECTION_STRING)}
-        #executors = {'default': ThreadPoolExecutor(20)}
-        #timezone = pytz.timezone('Europe/Zurich')
-        #background_scheduler = BackgroundScheduler(jobstores=jobstores, executors=executors, timezone=timezone)
-        #return(Async_Sched_Ayo.get_jobs())
         Async_Sched_Ayo.remove_job(sched_id)
-        #background_scheduler.start()
         
     except Exception as e:
         logger.error('Error: %s', e)
