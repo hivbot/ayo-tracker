@@ -43,10 +43,33 @@ async def post_scheduler(scheduler_input: SchedulerInput):
 
         scheduler_id = user_id + intent_name + query_value
         logger.info("scheduler_id: %s", scheduler_id)
-        
+
         ayo_scheduler.set_ayo_scheduler(time_point,query_value,intent_name,user_id,scheduler_id)
               
         return JSONResponse(content={"message": "Scheduler set successfully"})
+
+    except Exception as e:
+        logger.error("Error: %s", e)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+@app.post("/v2")
+async def get_scheduler(get_input: BaseInput):
+    try:
+        user_id = get_input.user_id
+        intent_name = get_input.intent_name
+        query_value = get_input.query_value
+        logger.info("Received scheduler get request:")
+        logger.info("user_id: %s", user_id)
+        logger.info("intent_name: %s", intent_name)
+        logger.info("query_value: %s", query_value)
+        
+        scheduler_id = user_id + intent_name + query_value
+
+        get_scheduler_response = ayo_scheduler.check_ayo_scheduler(scheduler_id)
+
+        #call_intent_endpoint(user_id, intent_name = "" )
+
+        return JSONResponse(content={"message": get_scheduler_response})
 
     except Exception as e:
         logger.error("Error: %s", e)
@@ -70,6 +93,7 @@ async def delete_scheduler(delete_input: BaseInput):
         ayo_scheduler.delete_ayo_scheduler(scheduler_id)
 
         return JSONResponse(content={"message": "Scheduler deleted successfully"})
+
     except Exception as e:
         logger.error("Error: %s", e)
         raise HTTPException(status_code=500, detail="Internal Server Error")

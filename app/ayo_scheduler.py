@@ -7,6 +7,7 @@ import apscheduler
 import re
 import logging
 import requests
+import json
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.schedulers.background import BackgroundScheduler, BlockingScheduler
 from apscheduler.jobstores.mongodb import MongoDBJobStore
@@ -51,7 +52,8 @@ def set_ayo_scheduler(
     scheduler_id: str):
     try:
         if query_value == "m": #medication
-            appDateTime = format_timestamp_to_cron(exec_time)
+            appDateTime = format_timestamp_to_cron(exec_time) 
+            formatted_time = appDateTime.strftime("%I:%M %p")
             Async_Sched_Ayo.add_job(
                 call_intent_endpoint,
                 'cron',
@@ -64,6 +66,7 @@ def set_ayo_scheduler(
                 args = (user_id, intent_name, query_value),
                 misfire_grace_time=30,
                 id = scheduler_id,
+                name = formatted_time,
                 replace_existing=True
             )
 
@@ -123,9 +126,15 @@ def call_intent_endpoint(user_id, intent_name, query_value=""):
     except Exception as e:
         logger.error('Error: %s', e)
 
-def check_ayo_scheduler(sch_id):
+def check_ayo_scheduler(scheduler_id: str):
     try: 
-        print(Async_Sched_Ayo.get_job(sch_id))
+        scheduled_job = Async_Sched_Ayo.get_job(scheduler_id)
+        if scheduled_job == None:
+            return "There is no reminder scheduled. Please add a new reminder using the menu"
+        
+        else:
+            job_name = scheduled_job.name
+            return job_name
 
     except Exception as e:
         logger.error('Error: %s', e)
