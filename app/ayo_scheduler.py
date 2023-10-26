@@ -126,7 +126,7 @@ def call_intent_endpoint(user_id, intent_name, query_value=""):
     except Exception as e:
         logger.error('Error: %s', e)
 
-def check_ayo_scheduler(scheduler_id: str): #for reset
+def check_ayo_scheduler(scheduler_id: str):
     try: 
         scheduled_job = Async_Sched_Ayo.get_job(scheduler_id)
         if scheduled_job == None:
