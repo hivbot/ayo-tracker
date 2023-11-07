@@ -27,6 +27,10 @@ class BaseInput(BaseModel):
 class SchedulerInput(BaseInput):
     time_point: str
 
+
+class ApppointmentInput(SchedulerInput):
+    appointment_title: str
+
 @app.post("/v1")
 async def post_scheduler(scheduler_input: SchedulerInput):
     try:
@@ -65,13 +69,39 @@ async def get_scheduler(get_input: BaseInput):
         
         scheduler_id = user_id + intent_name + query_value
 
-        get_scheduler_response = ayo_scheduler.check_ayo_scheduler(scheduler_id)
+        get_scheduler_response = ayo_scheduler.check_ayo_scheduler(scheduler_id, query_value)
 
-        return JSONResponse(content={"scheduler_status": get_scheduler_response})
+        return JSONResponse(content={"message": "get_scheduler_response"})
 
     except Exception as e:
         logger.error("Error: %s", e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+@app.post("/v3")
+async def post_app_scheduler(appointment_input: ApppointmentInput):
+    try:
+        user_id = appointment_input.user_id
+        intent_name = appointment_input.intent_name
+        query_value = appointment_input.query_value
+        time_point = appointment_input.time_point
+        appointment_title = appointment_input.appointment_title
+        logger.info("Received scheduler get request:")
+        logger.info("user_id: %s", user_id)
+        logger.info("intent_name: %s", intent_name)
+        logger.info("time_point: %s", time_point)
+        logger.info("query_value: %s", query_value)
+        logger.info("appointment_title: %s", appointment_title)
+        
+        scheduler_id = user_id + intent_name + query_value
+
+        ayo_scheduler.set_ayo_scheduler(time_point,query_value,intent_name,user_id,scheduler_id,appointment_title)
+
+        return JSONResponse(content={"message": "Appointment retrieved successfully"})
+
+    except Exception as e:
+        logger.error("Error: %s", e)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
 
 @app.delete("/v1")
 async def delete_scheduler(delete_input: BaseInput):
@@ -88,7 +118,7 @@ async def delete_scheduler(delete_input: BaseInput):
         scheduler_id = user_id + intent_name + query_value
         logger.info("scheduler_id: %s", scheduler_id)
 
-        ayo_scheduler.delete_ayo_scheduler(scheduler_id)
+        ayo_scheduler.delete_ayo_scheduler(scheduler_id,query_value)
 
         return JSONResponse(content={"message": "Scheduler deleted successfully"})
 

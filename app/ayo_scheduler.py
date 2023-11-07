@@ -49,7 +49,8 @@ def set_ayo_scheduler(
     query_value: str,
     intent_name: str, 
     user_id: str, 
-    scheduler_id: str):
+    scheduler_id: str,
+    appoint_name: str = ""):
     try:
         if query_value == "m": #medication
             appDateTime = format_timestamp_to_cron(exec_time) 
@@ -70,10 +71,26 @@ def set_ayo_scheduler(
                 replace_existing=True
             )
 
-
-        elif query_value == "a": #appointment
-            appDateTime = format_timestamp_to_cron(exec_time)
+        elif query_value == "a": #appointment reminder 24 hours before
+            appDateTime = format_timestamp_to_cron(exec_time) 
+            formatted_time = appDateTime.strftime("%I:%M %p")
+            appRemDateTime = appDateTime - timedelta(hours = 24)
+            appRem_id = scheduler_id + "24hReminder"
             Async_Sched_Ayo.add_job(
+                call_intent_endpoint,
+                'cron',
+                year = appRemDateTime.year,
+                month = appRemDateTime.month,
+                day = appRemDateTime.day,
+                hour = appRemDateTime.hour,
+                minute = appRemDateTime.minute,
+                second = appRemDateTime.second,
+                args = (user_id, "snooze_appointment_reminder", query_value),
+                misfire_grace_time=30,
+                id = appRem_id,
+                name = appoint_name
+            )
+            Async_Sched_Ayo.add_job( #appointment itself
                 call_intent_endpoint,
                 'cron',
                 year = appDateTime.year,
@@ -85,7 +102,10 @@ def set_ayo_scheduler(
                 args = (user_id, intent_name, query_value),
                 misfire_grace_time=30,
                 id = scheduler_id,
+                name = appoint_name,
+                replace_existing=True
             )
+
 
         elif query_value == "s": #snooze
             appDateTime = format_timestamp_to_cron(exec_time)
@@ -126,22 +146,47 @@ def call_intent_endpoint(user_id, intent_name, query_value=""):
     except Exception as e:
         logger.error('Error: %s', e)
 
-def check_ayo_scheduler(scheduler_id: str):
+def check_ayo_scheduler(scheduler_id: str, query_value: str):
     try: 
-        scheduled_job = Async_Sched_Ayo.get_job(scheduler_id)
-        if scheduled_job == None:
-            return "There is no reminder scheduled. Please add a new reminder using the menu"
+        if query_value == "m":
+            scheduled_job = Async_Sched_Ayo.get_job(scheduler_id)
+            if scheduled_job == None:
+                return "There is no reminder scheduled. Please add a new reminder using the menu"
         
-        else:
-            job_name = scheduled_job.name
-            return job_name
+            else:
+                job_name = scheduled_job.name
+                return job_name
+
 
     except Exception as e:
         logger.error('Error: %s', e)
 
-def delete_ayo_scheduler(sched_id):
+def appointment_id_builder(scheduler_id):
+    job_ids = []
+    
+    for number in range(3):
+        unique_id = f'{scheduler_id}_{number}'
+        job_ids.append(unique_id)
+    
+    return job_ids
+
+def check_ayo_appointment(scheduler_id):
+    ids = appointment_id_builder(scheduler_id)
+    responses = []
+    for x in ids:
+        responses.append(Async_Sched_Ayo.get_job(x))
+    return responses
+
+
+def delete_ayo_scheduler(sched_id,query_value):
     try:
-        Async_Sched_Ayo.remove_job(sched_id)
+        appRem_id = sched_id + "24hReminder"
+        if query_value == "a":
+            Async_Sched_Ayo.remove_job(sched_id)
+            Async_Sched_Ayo.remove_job(appRem_id)
+        else:
+            Async_Sched_Ayo.remove_job(sched_id)
+
         
     except Exception as e:
         logger.error('Error: %s', e)
