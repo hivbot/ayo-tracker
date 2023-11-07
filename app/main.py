@@ -71,7 +71,7 @@ async def get_scheduler(get_input: BaseInput):
 
         get_scheduler_response = ayo_scheduler.check_ayo_scheduler(scheduler_id, query_value)
 
-        return JSONResponse(content={"message": "get_scheduler_response"})
+        return JSONResponse(content={"message": get_scheduler_response})
 
     except Exception as e:
         logger.error("Error: %s", e)
