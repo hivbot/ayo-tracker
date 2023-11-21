@@ -71,11 +71,13 @@ def set_ayo_scheduler(
                 replace_existing=True
             )
 
-        elif query_value == "a": #appointment reminder 24 hours before
+        elif "a" in query_value: #appointment reminder 24 hours before
+            ids = appointment_id_builder(scheduler_id)
             appDateTime = format_timestamp_to_cron(exec_time) 
-            formatted_time = appDateTime.strftime("%I:%M %p")
+            formatted_time = appDateTime.strftime("%a %F %I:%M %p")
+            name = f"'{appoint_name}' on {formatted_time}"
             appRemDateTime = appDateTime - timedelta(hours = 24)
-            appRem_id = scheduler_id + "24hReminder"
+            appRem_id24 = scheduler_id + "24hReminder"
             Async_Sched_Ayo.add_job(
                 call_intent_endpoint,
                 'cron',
@@ -87,8 +89,9 @@ def set_ayo_scheduler(
                 second = appRemDateTime.second,
                 args = (user_id, "snooze_appointment_reminder", query_value),
                 misfire_grace_time=30,
-                id = appRem_id,
-                name = appoint_name
+                id = appRem_id24,
+                name = name,
+                replace_existing=True
             )
             Async_Sched_Ayo.add_job( #appointment itself
                 call_intent_endpoint,
@@ -102,7 +105,7 @@ def set_ayo_scheduler(
                 args = (user_id, intent_name, query_value),
                 misfire_grace_time=30,
                 id = scheduler_id,
-                name = appoint_name,
+                name = name,
                 replace_existing=True
             )
 
@@ -157,6 +160,9 @@ def check_ayo_scheduler(scheduler_id: str, query_value: str):
                 job_name = scheduled_job.name
                 return job_name
 
+        elif query_value == "a":
+            handback = check_ayo_appointment(scheduler_id)
+            return handback
 
     except Exception as e:
         logger.error('Error: %s', e)
@@ -164,7 +170,7 @@ def check_ayo_scheduler(scheduler_id: str, query_value: str):
 def appointment_id_builder(scheduler_id):
     job_ids = []
     
-    for number in range(3):
+    for number in range(2):
         unique_id = f'{scheduler_id}_{number}'
         job_ids.append(unique_id)
     
@@ -174,17 +180,21 @@ def check_ayo_appointment(scheduler_id):
     ids = appointment_id_builder(scheduler_id)
     responses = []
     for x in ids:
-        responses.append(Async_Sched_Ayo.get_job(x))
+        response = Async_Sched_Ayo.get_job(x)
+        if response == None:
+            responses.append("No appointment scheduled")
+        else:
+            responses.append(response.name)
     return responses
 
 
-def delete_ayo_scheduler(sched_id,query_value):
+def delete_ayo_scheduler(sched_id: str,query_value: str):
     try:
-        appRem_id = sched_id + "24hReminder"
-        if query_value == "a":
+        appRem_id24 = sched_id + "24hReminder"
+        if "a" in query_value:
             Async_Sched_Ayo.remove_job(sched_id)
-            Async_Sched_Ayo.remove_job(appRem_id)
-        else:
+            Async_Sched_Ayo.remove_job(appRem_id24)
+        elif query_value == "m":
             Async_Sched_Ayo.remove_job(sched_id)
 
         

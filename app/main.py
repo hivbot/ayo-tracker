@@ -70,8 +70,9 @@ async def get_scheduler(get_input: BaseInput):
         scheduler_id = user_id + intent_name + query_value
 
         get_scheduler_response = ayo_scheduler.check_ayo_scheduler(scheduler_id, query_value)
+        logger.info("scheduler_response: %s", get_scheduler_response)
 
-        return JSONResponse(content={"message": get_scheduler_response})
+        return JSONResponse(content={"message": get_scheduler_response, "slot1": get_scheduler_response[0], "slot2": get_scheduler_response[1]})
 
     except Exception as e:
         logger.error("Error: %s", e)
@@ -96,7 +97,7 @@ async def post_app_scheduler(appointment_input: ApppointmentInput):
 
         ayo_scheduler.set_ayo_scheduler(time_point,query_value,intent_name,user_id,scheduler_id,appointment_title)
 
-        return JSONResponse(content={"message": "Appointment retrieved successfully"})
+        return JSONResponse(content={"message": "Appointment set successfully"})
 
     except Exception as e:
         logger.error("Error: %s", e)
