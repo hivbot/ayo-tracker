@@ -137,7 +137,7 @@ def call_intent_endpoint(user_id, intent_name, query_value=""):
             'user_id': user_id,
             'intent_name': intent_name,
             'query_value': query_value,
-           'phone_number_id': PHONE_NUMBER_ID,
+        'phone_number_id': PHONE_NUMBER_ID,
             'user_name': "Ayo Scheduler"
         }
         response = requests.post(AYO_WHATSAPP_API + '/intent', json=payload)
