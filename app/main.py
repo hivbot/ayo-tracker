@@ -10,8 +10,8 @@ from fastapi.responses import JSONResponse
 
 
 
-#AYO_WHATSAPP_API = os.environ.get('AYO_WHATSAPP_API')
-#PHONE_NUMBER_ID = os.environ.get('PHONE_NUMBER_ID')
+AYO_WHATSAPP_API = os.environ.get('AYO_WHATSAPP_API')
+PHONE_NUMBER_ID = os.environ.get('PHONE_NUMBER_ID')
 
 app = FastAPI()
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
@@ -104,6 +104,7 @@ async def post_app_scheduler(appointment_input: ApppointmentInput):
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 @app.post("/v4")
+# this is just a test for the template messag
 async def post_scheduler(scheduler_input: SchedulerInput):
     try:
         user_id = scheduler_input.user_id
@@ -119,8 +120,9 @@ async def post_scheduler(scheduler_input: SchedulerInput):
 
         scheduler_id = user_id + intent_name + query_value
         logger.info("scheduler_id: %s", scheduler_id)
-
         call_template_endpoint(user_id)
+        logger.info("end call_template_endpoint")
+
         #ayo_scheduler.set_ayo_scheduler(time_point,query_value,intent_name,user_id,scheduler_id)
               
         return JSONResponse(content={"message": "Scheduler set successfully"})
@@ -178,7 +180,6 @@ def call_template_endpoint(user_id):
         payload = {
             'user_id': user_id,
             'phone_number_id': PHONE_NUMBER_ID,
-            'user_name': "Ayo Scheduler"
         }
         response = requests.post(AYO_WHATSAPP_API + '/template/scheduler', json=payload)
         if response.status_code == 200:

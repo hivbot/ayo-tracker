@@ -56,7 +56,7 @@ def set_ayo_scheduler(
             appDateTime = format_timestamp_to_cron(exec_time) 
             formatted_time = appDateTime.strftime("%I:%M %p")
             Async_Sched_Ayo.add_job(
-                call_intent_endpoint,
+                call_template_endpoint,
                 'cron',
                 year = "*",
                 month = "*",
@@ -64,7 +64,7 @@ def set_ayo_scheduler(
                 hour = appDateTime.hour,
                 minute = appDateTime.minute,
                 second = appDateTime.second,
-                args = (user_id, intent_name, query_value),
+                args = (user_id,),
                 misfire_grace_time=30,
                 id = scheduler_id,
                 name = formatted_time,
@@ -141,6 +141,21 @@ def call_intent_endpoint(user_id, intent_name, query_value=""):
             'user_name': "Ayo Scheduler"
         }
         response = requests.post(AYO_WHATSAPP_API + '/intent', json=payload)
+        if response.status_code == 200:
+            logger.info('Request successful')
+        else:
+            logger.error('Request failed with status code: %d', response.status_code)
+        
+    except Exception as e:
+        logger.error('Error: %s', e)
+
+def call_template_endpoint(user_id):
+    try:
+        payload = {
+            'user_id': user_id,
+            'phone_number_id': PHONE_NUMBER_ID,
+        }
+        response = requests.post(AYO_WHATSAPP_API + '/template/scheduler', json=payload)
         if response.status_code == 200:
             logger.info('Request successful')
         else:
