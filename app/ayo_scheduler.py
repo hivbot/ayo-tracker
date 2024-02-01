@@ -75,11 +75,12 @@ def set_ayo_scheduler(
             ids = appointment_id_builder(scheduler_id)
             appDateTime = format_timestamp_to_cron(exec_time) 
             formatted_time = appDateTime.strftime("%a %F %I:%M %p")
+            snooze_formatted_time = f"{formatted_time}. I will remind you again on time."
             name = f"'{appoint_name}' on {formatted_time}"
             appRemDateTime = appDateTime - timedelta(hours = 24)
             appRem_id24 = scheduler_id + "24hReminder"
             Async_Sched_Ayo.add_job(
-                call_intent_endpoint,
+                call_template_appointscheduler_endpoint,
                 'cron',
                 year = appRemDateTime.year,
                 month = appRemDateTime.month,
@@ -87,14 +88,14 @@ def set_ayo_scheduler(
                 hour = appRemDateTime.hour,
                 minute = appRemDateTime.minute,
                 second = appRemDateTime.second,
-                args = (user_id, "snooze_appointment_reminder", query_value),
+                args = (user_id, appoint_name, snooze_formatted_time),
                 misfire_grace_time=30,
                 id = appRem_id24,
                 name = name,
                 replace_existing=True
             )
             Async_Sched_Ayo.add_job( #appointment itself
-                call_intent_endpoint,
+                call_template_appointscheduler_endpoint,
                 'cron',
                 year = appDateTime.year,
                 month = appDateTime.month,
@@ -102,7 +103,7 @@ def set_ayo_scheduler(
                 hour = appDateTime.hour,
                 minute = appDateTime.minute,
                 second = appDateTime.second,
-                args = (user_id, intent_name, query_value),
+                args = (user_id, appoint_name, formatted_time),
                 misfire_grace_time=30,
                 id = scheduler_id,
                 name = name,
@@ -137,7 +138,7 @@ def call_intent_endpoint(user_id, intent_name, query_value=""):
             'user_id': user_id,
             'intent_name': intent_name,
             'query_value': query_value,
-        'phone_number_id': PHONE_NUMBER_ID,
+            'phone_number_id': PHONE_NUMBER_ID,
             'user_name': "Ayo Scheduler"
         }
         response = requests.post(AYO_WHATSAPP_API + '/intent', json=payload)
@@ -163,6 +164,24 @@ def call_template_endpoint(user_id):
         
     except Exception as e:
         logger.error('Error: %s', e)
+
+def call_template_appointscheduler_endpoint(user_id, appointment_title, time_point):
+    try:
+        payload = {
+            'user_id': user_id,
+            'phone_number_id': PHONE_NUMBER_ID,
+            'appointment_title': appointment_title,            
+            'time_point': time_point,
+        }
+        response = requests.post(AYO_WHATSAPP_API + '/template/appointscheduler', json=payload)
+        if response.status_code == 200:
+            logger.info('Request successful')
+        else:
+            logger.error('Request failed with status code: %d', response.status_code)
+        
+    except Exception as e:
+        logger.error('Error: %s', e)
+
 
 def check_ayo_scheduler(scheduler_id: str, query_value: str):
     try: 
