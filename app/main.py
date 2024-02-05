@@ -41,6 +41,7 @@ async def post_scheduler(scheduler_input: SchedulerInput):
         
         logger.info("Received scheduler post request:")
         logger.info("user_id: %s", user_id)
+        logger.info("type user_id: %s", type(user_id))
         logger.info("intent_name: %s", intent_name)
         logger.info("time_point: %s", time_point)
         logger.info("query_value: %s", query_value)

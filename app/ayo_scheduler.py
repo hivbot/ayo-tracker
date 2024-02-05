@@ -64,7 +64,7 @@ def set_ayo_scheduler(
                 hour = appDateTime.hour,
                 minute = appDateTime.minute,
                 second = appDateTime.second,
-                args = (user_id),
+                args = (user_id,),
                 misfire_grace_time=30,
                 id = scheduler_id,
                 name = formatted_time,
@@ -122,9 +122,10 @@ def set_ayo_scheduler(
                 hour = appDateTime.hour,
                 minute = appDateTime.minute,
                 second = appDateTime.second,
-                args = (user_id),
+                args = (user_id,),
                 misfire_grace_time=30,
-                id = scheduler_id
+                id = scheduler_id,
+                replace_existing=True                
             )
 
 
