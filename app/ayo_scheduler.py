@@ -114,7 +114,7 @@ def set_ayo_scheduler(
         elif query_value == "s": #snooze
             appDateTime = format_timestamp_to_cron(exec_time)
             Async_Sched_Ayo.add_job(
-                call_template_endpoint,
+                call_intent_endpoint,
                 'cron',
                 year = appDateTime.year,
                 month = appDateTime.month,
@@ -122,10 +122,9 @@ def set_ayo_scheduler(
                 hour = appDateTime.hour,
                 minute = appDateTime.minute,
                 second = appDateTime.second,
-                args = (user_id,),
+                args = (user_id, intent_name, query_value),
                 misfire_grace_time=30,
                 id = scheduler_id,
-                replace_existing=True                
             )
 
 
@@ -151,7 +150,7 @@ def call_intent_endpoint(user_id, intent_name, query_value=""):
     except Exception as e:
         logger.error('Error: %s', e)
 
-def call_template_endpoint(user_id: str):
+def call_template_endpoint(user_id):
     try:
         payload = {
             'user_id': user_id,
