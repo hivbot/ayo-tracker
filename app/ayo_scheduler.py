@@ -55,6 +55,7 @@ def set_ayo_scheduler(
         if query_value == "m": #medication
             appDateTime = format_timestamp_to_cron(exec_time) 
             formatted_time = appDateTime.strftime("%I:%M %p")
+            rem_text = 'Here is my reminder for today.'
             Async_Sched_Ayo.add_job(
                 call_template_endpoint,
                 'cron',
@@ -64,7 +65,7 @@ def set_ayo_scheduler(
                 hour = appDateTime.hour,
                 minute = appDateTime.minute,
                 second = appDateTime.second,
-                args = (user_id,),
+                args = (user_id,rem_text),
                 misfire_grace_time=30,
                 id = scheduler_id,
                 name = formatted_time,
@@ -113,6 +114,7 @@ def set_ayo_scheduler(
 
         elif query_value == "s": #snooze
             appDateTime = format_timestamp_to_cron(exec_time)
+            rem_text = 'I would like to remind you again.'
             Async_Sched_Ayo.add_job(
                 call_template_endpoint,
                 'cron',
@@ -122,7 +124,7 @@ def set_ayo_scheduler(
                 hour = appDateTime.hour,
                 minute = appDateTime.minute,
                 second = appDateTime.second,
-                args = (user_id,),
+                args = (user_id,rem_text),
                 misfire_grace_time=30,
                 id = scheduler_id,
                 replace_existing=True  
@@ -151,11 +153,12 @@ def call_intent_endpoint(user_id, intent_name, query_value=""):
     except Exception as e:
         logger.error('Error: %s', e)
 
-def call_template_endpoint(user_id):
+def call_template_endpoint(user_id, reminder_text):
     try:
         payload = {
             'user_id': user_id,
             'phone_number_id': PHONE_NUMBER_ID,
+            'reminder_text': reminder_text
         }
         response = requests.post(AYO_WHATSAPP_API + '/template/scheduler', json=payload)
         if response.status_code == 200:
