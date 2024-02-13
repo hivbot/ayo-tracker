@@ -49,31 +49,41 @@ def result_logger(res):
 
 def post_data(user_id, topic_name, query_value, time_point):
     if topic_name == "i": #initialization
-        data = {
-            "user_id": user_id,
-            "general_startdate": time_point,
-            "general_nickname": query_value,
-            "faq_question": 0,
-            "faq_rephrase": 0,
-            "faq_threshold": 0,
-            "app_rem_startdate": 0,
-            "app_rem_count": 0,
-            "med_rem_startdate": 0,
-            "med_rem_count": 0,
-            "med_rem_yes": 0,
-            "med_rem_remind": 0,
-            "adherence": "not_started",
-            "drug_use_storage": "not_started",
-            "drugs_and_side_effects": "not_started",
-            "sex_h": "not_started"
-        }
-        
+        filter = {'user_id': user_id}
         try:
-            result = collection.insert_one(data)
-            return logger.info("Data inserted with _id: {}".format(result.inserted_id))
-            
+            res = collection.find_one(filter)
+
         except Exception as e:
-            return logger.error(f"An error occurred: {e}")
+            print(f"An error occurred: {e}")
+
+        if res == None:
+            data = {
+                "user_id": user_id,
+                "general_startdate": time_point,
+                "general_nickname": query_value,
+                "faq_question": 0,
+                "faq_rephrase": 0,
+                "faq_threshold": 0,
+                "app_rem_startdate": 0,
+                "app_rem_count": 0,
+                "med_rem_startdate": 0,
+                "med_rem_count": 0,
+                "med_rem_yes": 0,
+                "med_rem_remind": 0,
+                "adherence": "not_started",
+                "drug_use_storage": "not_started",
+                "drugs_and_side_effects": "not_started",
+                "sex_h": "not_started"
+            }
+            
+            try:
+                result = collection.insert_one(data)
+                return logger.info("Data inserted with _id: {}".format(result.inserted_id))
+                
+            except Exception as e:
+                return logger.error(f"An error occurred: {e}")
+        else:
+            return logger.error("There is already an entry initiated with the same user_id")
 
     elif topic_name in inc_list: #covers incremental update of all topics in inc_list
         #first, checking whether it is 0 or not.
@@ -141,3 +151,4 @@ def delete_data(user_id):
             return logger.info("No matching document found to delete.")
     except Exception as e:
         return logger.info(f"An error occurred: {e}")
+
