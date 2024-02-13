@@ -1,7 +1,7 @@
 import os
 import requests
 import logging
-import app.ayo_scheduler as ayo_scheduler
+import app.ayo_tracker as ayo_tracker
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
@@ -20,137 +20,52 @@ logger = logging.getLogger(__name__)
 
 class BaseInput(BaseModel):
     user_id: str
-    intent_name: str
+
+
+
+class TrackerInput(BaseInput):
+    topic_name: str
     query_value: Optional[str] = None
+    time_point: Optional[str] = None
 
-
-class SchedulerInput(BaseInput):
-    time_point: str
-
-
-class ApppointmentInput(SchedulerInput):
-    appointment_title: str
 
 @app.post("/v1")
-async def post_scheduler(scheduler_input: SchedulerInput):
+async def post_tracker(tracker_input: TrackerInput):
     try:
-        user_id = scheduler_input.user_id
-        intent_name = scheduler_input.intent_name
-        time_point = scheduler_input.time_point
-        query_value = scheduler_input.query_value
+        user_id = tracker_input.user_id
+        topic_name = tracker_input.topic_name
+        time_point = tracker_input.time_point
+        query_value = tracker_input.query_value
         
         logger.info("Received scheduler post request:")
         logger.info("user_id: %s", user_id)
-        logger.info("type user_id: %s", type(user_id))
-        logger.info("intent_name: %s", intent_name)
-        logger.info("time_point: %s", time_point)
+        logger.info("intent_name: %s", topic_name)
         logger.info("query_value: %s", query_value)
+        logger.info("time_point: %s", time_point)
 
-        scheduler_id = user_id + intent_name + query_value
-        logger.info("scheduler_id: %s", scheduler_id)
 
-        ayo_scheduler.set_ayo_scheduler(time_point,query_value,intent_name,user_id,scheduler_id)
+        tracker_id = user_id
+        logger.info("scheduler_id: %s", tracker_id)
+
+        ayo_tracker.post_data(user_id, topic_name, query_value, time_point)
               
-        return JSONResponse(content={"message": "Scheduler set successfully"})
+        return JSONResponse(content={"message": "Tracker post successful"})
 
     except Exception as e:
         logger.error("Error: %s", e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
-
-@app.post("/v2")
-async def get_scheduler(get_input: BaseInput):
-    try:
-        user_id = get_input.user_id
-        intent_name = get_input.intent_name
-        query_value = get_input.query_value
-        logger.info("Received scheduler get request:")
-        logger.info("user_id: %s", user_id)
-        logger.info("intent_name: %s", intent_name)
-        logger.info("query_value: %s", query_value)
-        
-        scheduler_id = user_id + intent_name + query_value
-
-        get_scheduler_response = ayo_scheduler.check_ayo_scheduler(scheduler_id, query_value)
-        logger.info("scheduler_response: %s", get_scheduler_response)
-
-        return JSONResponse(content={"message": get_scheduler_response, "slot1": get_scheduler_response[0], "slot2": get_scheduler_response[1]})
-
-    except Exception as e:
-        logger.error("Error: %s", e)
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-
-@app.post("/v3")
-async def post_app_scheduler(appointment_input: ApppointmentInput):
-    try:
-        user_id = appointment_input.user_id
-        intent_name = appointment_input.intent_name
-        query_value = appointment_input.query_value
-        time_point = appointment_input.time_point
-        appointment_title = appointment_input.appointment_title
-        logger.info("Received scheduler get request:")
-        logger.info("user_id: %s", user_id)
-        logger.info("intent_name: %s", intent_name)
-        logger.info("time_point: %s", time_point)
-        logger.info("query_value: %s", query_value)
-        logger.info("appointment_title: %s", appointment_title)
-        
-        scheduler_id = user_id + intent_name + query_value
-
-        ayo_scheduler.set_ayo_scheduler(time_point,query_value,intent_name,user_id,scheduler_id,appointment_title)
-
-        return JSONResponse(content={"message": "Appointment set successfully"})
-
-    except Exception as e:
-        logger.error("Error: %s", e)
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-
-@app.post("/v4")
-# this is just a test for the template message
-async def post_scheduler(scheduler_input: SchedulerInput):
-    try:
-        user_id = scheduler_input.user_id
-        intent_name = scheduler_input.intent_name
-        time_point = scheduler_input.time_point
-        query_value = scheduler_input.query_value
-        
-        logger.info("Received scheduler post request:")
-        logger.info("user_id: %s", user_id)
-        logger.info("intent_name: %s", intent_name)
-        logger.info("time_point: %s", time_point)
-        logger.info("query_value: %s", query_value)
-
-        scheduler_id = user_id + intent_name + query_value
-        logger.info("scheduler_id: %s", scheduler_id)
-        call_template_endpoint(user_id)
-        logger.info("end call_template_endpoint")
-
-        #ayo_scheduler.set_ayo_scheduler(time_point,query_value,intent_name,user_id,scheduler_id)
-              
-        return JSONResponse(content={"message": "Scheduler set successfully"})
-
-    except Exception as e:
-        logger.error("Error: %s", e)
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-
 
 @app.delete("/v1")
-async def delete_scheduler(delete_input: BaseInput):
+async def delete_tracker_entry(delete_input: BaseInput):
     try:
         user_id = delete_input.user_id
-        intent_name = delete_input.intent_name
-        query_value = delete_input.query_value
 
         logger.info("Received scheduler delete request:")
         logger.info("user_id: %s", user_id)
-        logger.info("intent_name: %s", intent_name)
-        logger.info("query_value: %s", query_value)
-        
-        scheduler_id = user_id + intent_name + query_value
-        logger.info("scheduler_id: %s", scheduler_id)
 
-        ayo_scheduler.delete_ayo_scheduler(scheduler_id,query_value)
+        ayo_tracker.delete_data(user_id)
 
-        return JSONResponse(content={"message": "Scheduler deleted successfully"})
+        return JSONResponse(content={"message": "Tracker entry deleted successfully"})
 
     except Exception as e:
         logger.error("Error: %s", e)
