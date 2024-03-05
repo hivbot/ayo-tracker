@@ -147,7 +147,7 @@ def get_entry(user_id):
         if res == None:
             return "no user entry"
         else:
-            return True
+            return "user entry existing"
 
     except Exception as e:
             return logger.error("Error: %s", e)
