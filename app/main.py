@@ -55,6 +55,23 @@ async def post_tracker(tracker_input: TrackerInput):
         logger.error("Error: %s", e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
+@app.get("/v1")
+async def get_tracker_entry(get_input: BaseInput):
+    try:
+        user_id = get_input.user_id
+
+        logger.info("Received scheduler get request:")
+        logger.info("user_id: %s", user_id)
+        
+        get_tracker_response = ayo_tracker.get_entry(user_id)
+
+        return JSONResponse(content={"message": get_tracker_response})
+    
+    except Exception as e:
+        logger.error("Error: %s", e)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
 @app.delete("/v1")
 async def delete_tracker_entry(delete_input: BaseInput):
     try:

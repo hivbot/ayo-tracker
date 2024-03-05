@@ -140,6 +140,18 @@ def post_data(user_id, topic_name, query_value, time_point):
     else:
         return "an error occured, please try again later"
 
+def get_entry(user_id):
+    filter = {'user_id': user_id}
+    try:
+        res = collection.find_one(filter)
+        if res == None:
+            return "no user entry"
+        else:
+            return True
+
+    except Exception as e:
+            return logger.error("Error: %s", e)
+
 
 def delete_data(user_id):
     filter = {'user_id': user_id}
