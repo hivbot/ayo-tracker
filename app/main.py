@@ -55,7 +55,7 @@ async def post_tracker(tracker_input: TrackerInput):
         logger.error("Error: %s", e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-@app.get("/v1")
+@app.post("/v2")
 async def get_tracker_entry(get_input: BaseInput):
     try:
         user_id = get_input.user_id
