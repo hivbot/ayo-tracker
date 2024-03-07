@@ -34,7 +34,9 @@ collection = db['tracking']
 
 inc_list = ["faq_question", "faq_rephrase", "faq_threshold", "app_rem_count"]
 med_rem_list = ["med_rem_startdate", "med_rem_yes", "med_rem_remind"]
-module_list = ["adherence","drug_use_storage","drugs_and_side_effects","sex_h"]
+module_list = ["adherence","drug_use_storage","drugs_and_side_effects","sex_h", "hiv_myth",
+            "stigmatisation", "jewel_story", "support_group_purpose", "disclosure_general", "disclosure_spouse",
+            "hiv_basics", "stress_management", "menstruation"]
 
 
 def result_logger(res):
@@ -73,7 +75,16 @@ def post_data(user_id, topic_name, query_value, time_point):
                 "adherence": "not_started",
                 "drug_use_storage": "not_started",
                 "drugs_and_side_effects": "not_started",
-                "sex_h": "not_started"
+                "sex_h": "not_started",
+                "hiv_myth": "not_started",
+                "stigmatisation": "not_started",
+                "jewel_story": "not_started",
+                "support_group_purpose": "not_started",
+                "disclosure_general": "not_started",
+                "disclosure_spouse": "not_started",
+                "hiv_basics": "not_started",
+                "stress_management": "not_started",
+                "menstruation": "not_started"
             }
             
             try:
@@ -126,7 +137,7 @@ def post_data(user_id, topic_name, query_value, time_point):
             except Exception as e:
                 return logger.error("Error: %s", e)
 
-    elif topic_name in module_list: #covers all modules, updates status "initiated", "completed"
+    elif topic_name in module_list: #covers all modules, updates status "initiated", "completed", "declined", 
         filter2 = {'user_id': user_id}
         update2 = {'$set': {topic_name: query_value}} #sets the module to the status (query_value)
 
