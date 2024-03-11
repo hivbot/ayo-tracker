@@ -7,12 +7,73 @@ import logging
 import requests
 import json
 from pymongo import MongoClient
-
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives import padding
 
 
 AYO_WHATSAPP_API = os.environ["AYO_WHATSAPP_API"]
 PHONE_NUMBER_ID = os.environ["PHONE_NUMBER_ID"]
 AYO_MONGODB_CONNECTION_STRING = os.environ["AYO_MONGODB_CONNECTION_STRING"]
+ENCRYPT_KEY = os.environ["ENCRYPT_KEY"]
+
+
+def derive_key(passphrase, salt, key_length):
+    backend = default_backend()
+    kdf = Scrypt(
+        salt=salt,
+        length=key_length,
+        n=2**14,
+        r=8,
+        p=1,
+        backend=backend
+    )
+    return kdf.derive(passphrase)
+
+def encrypt(data, passphrase):
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    
+    # Generate a random salt and IV
+    salt = os.urandom(16)
+    iv = os.urandom(16)
+    
+    # Derive key using the passphrase and salt
+    key = derive_key(passphrase.encode('utf-8'), salt, 32)
+    
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+    
+    padder = padding.PKCS7(algorithms.AES.block_size).padder()
+    padded_data = padder.update(data) + padder.finalize()
+    
+    encrypted_data = encryptor.update(padded_data) + encryptor.finalize()
+    
+    # Concatenate salt, IV, and encrypted data
+    encrypted_output = salt + iv + encrypted_data
+    return encrypted_output.hex()
+
+def decrypt(encrypted_data_hex, passphrase):
+    encrypted_data = bytes.fromhex(encrypted_data_hex)
+    
+    # Extract salt, IV, and encrypted data
+    salt = encrypted_data[:16]
+    iv = encrypted_data[16:32]
+    encrypted_data = encrypted_data[32:]
+    
+    # Derive key using the passphrase and salt
+    key = derive_key(passphrase.encode('utf-8'), salt, 32)
+    
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv), backend=default_backend())
+    decryptor = cipher.decryptor()
+    
+    decrypted_padded = decryptor.update(encrypted_data) + decryptor.finalize()
+    
+    unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+    decrypted_data = unpadder.update(decrypted_padded) + unpadder.finalize()
+    
+    return decrypted_data.decode('utf-8')
 
 
 
@@ -51,6 +112,7 @@ def result_logger(res):
 
 def post_data(user_id, topic_name, query_value, time_point):
     if topic_name == "i": #initialization
+        query_value = encrypt(query_value,ENCRYPT_KEY)        
         filter = {'user_id': user_id}
         try:
             res = collection.find_one(filter)
@@ -59,6 +121,7 @@ def post_data(user_id, topic_name, query_value, time_point):
             print(f"An error occurred: {e}")
 
         if res == None:
+
             data = {
                 "user_id": user_id,
                 "general_startdate": time_point,
@@ -156,9 +219,11 @@ def get_entry(user_id):
     try:
         res = collection.find_one(filter)
         if res == None:
-            return "no user entry"
+            return ["no user entry","no user entry"]
         else:
-            return "user entry existing"
+            nickname = res["general_nickname"]
+            nickname = decrypt(nickname,ENCRYPT_KEY)
+            return ["user entry existing", nickname]
 
     except Exception as e:
             return logger.error("Error: %s", e)

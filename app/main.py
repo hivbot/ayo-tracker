@@ -9,9 +9,9 @@ from fastapi.responses import JSONResponse
 
 
 
-
 AYO_WHATSAPP_API = os.environ.get('AYO_WHATSAPP_API')
 PHONE_NUMBER_ID = os.environ.get('PHONE_NUMBER_ID')
+
 
 app = FastAPI()
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
@@ -40,7 +40,7 @@ async def post_tracker(tracker_input: TrackerInput):
         logger.info("Received scheduler post request:")
         logger.info("user_id: %s", user_id)
         logger.info("intent_name: %s", topic_name)
-        logger.info("query_value: %s", query_value)
+        #logger.info("query_value: %s", query_value)
         logger.info("time_point: %s", time_point)
 
 
@@ -65,11 +65,12 @@ async def get_tracker_entry(get_input: BaseInput):
         
         get_tracker_response = ayo_tracker.get_entry(user_id)
 
-        return JSONResponse(content={"message": get_tracker_response})
+        return JSONResponse(content={"message": get_tracker_response[0], "nickname": get_tracker_response[1]})
     
     except Exception as e:
         logger.error("Error: %s", e)
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
 
 
 @app.delete("/v1")
