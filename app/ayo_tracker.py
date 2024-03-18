@@ -93,7 +93,8 @@ collection = db['tracking']
 
 # List of all items that incrementally update
 
-inc_list = ["faq_question", "faq_rephrase", "faq_threshold", "app_rem_count"]
+inc_list = ["faq_question", "faq_rephrase", "faq_threshold", "faq_confirmation_yes", "faq_confirmation_no",
+            "faq_satisfaction_yes", "faq_satisfaction_no", "app_rem_count"]
 med_rem_list = ["med_rem_startdate", "med_rem_yes", "med_rem_remind"]
 module_list = ["adherence","drug_use_storage","drugs_and_side_effects","sex_h", "hiv_myth",
             "stigmatisation", "jewel_story", "support_group_purpose", "disclosure_general", "disclosure_spouse",
@@ -127,6 +128,10 @@ def post_data(user_id, topic_name, query_value, time_point):
                 "general_startdate": time_point,
                 "general_nickname": query_value,
                 "faq_question": 0,
+                "faq_confirmation_yes": 0,
+                "faq_confirmation_no": 0,
+                "faq_satisfaction_yes": 0,
+                "faq_satisfaction_no": 0,
                 "faq_rephrase": 0,
                 "faq_threshold": 0,
                 "app_rem_startdate": 0,
@@ -219,11 +224,13 @@ def get_entry(user_id):
     try:
         res = collection.find_one(filter)
         if res == None:
-            return ["no user entry","no user entry"]
+            return ["no user entry","no user entry", "no user entry", "no user entry"]
         else:
             nickname = res["general_nickname"]
             nickname = decrypt(nickname,ENCRYPT_KEY)
-            return ["user entry existing", nickname]
+            med_startdate = res["med_rem_startdate"]
+            app_startdate = res["app_rem_startdate"]
+            return ["user entry existing", nickname, med_startdate, app_startdate]
 
     except Exception as e:
             return logger.error("Error: %s", e)

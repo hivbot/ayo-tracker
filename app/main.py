@@ -65,7 +65,11 @@ async def get_tracker_entry(get_input: BaseInput):
         
         get_tracker_response = ayo_tracker.get_entry(user_id)
 
-        return JSONResponse(content={"message": get_tracker_response[0], "nickname": get_tracker_response[1]})
+        return JSONResponse(content={
+            "message": get_tracker_response[0], 
+            "nickname": get_tracker_response[1], 
+            "med_startdate": get_tracker_response[2],
+            "app_startdate": get_tracker_response[3]})
     
     except Exception as e:
         logger.error("Error: %s", e)
