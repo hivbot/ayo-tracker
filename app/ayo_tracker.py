@@ -31,6 +31,7 @@ def derive_key(passphrase, salt, key_length):
     )
     return kdf.derive(passphrase)
 
+
 def encrypt(data, passphrase):
     if isinstance(data, str):
         data = data.encode('utf-8')
@@ -53,6 +54,7 @@ def encrypt(data, passphrase):
     # Concatenate salt, IV, and encrypted data
     encrypted_output = salt + iv + encrypted_data
     return encrypted_output.hex()
+
 
 def decrypt(encrypted_data_hex, passphrase):
     encrypted_data = bytes.fromhex(encrypted_data_hex)
@@ -94,8 +96,8 @@ collection = db['tracking']
 # List of all items that incrementally update
 
 inc_list = ["faq_question", "faq_rephrase", "faq_threshold", "faq_confirmation_yes", "faq_confirmation_no",
-            "faq_satisfaction_yes", "faq_satisfaction_no", "app_rem_count"]
-med_rem_list = ["med_rem_startdate", "med_rem_yes", "med_rem_remind"]
+            "faq_satisfaction_yes", "faq_satisfaction_no", "app_rem_count", "med_rem_count", "med_rem_yes", "med_rem_remind"]
+rem_list = ["med_rem_startdate", "app_rem_startdate"]
 module_list = ["adherence","drug_use_storage","drugs_and_side_effects","sex_h", "hiv_myth",
             "stigmatisation", "jewel_story", "support_group_purpose", "disclosure_general", "disclosure_spouse",
             "hiv_basics", "stress_management", "menstruation"]
@@ -110,6 +112,7 @@ def result_logger(res):
             return logger.info("No documents were modified.")
     else:
         return logger.info("No matching documents found.")
+
 
 def post_data(user_id, topic_name, query_value, time_point):
     if topic_name == "i": #initialization
@@ -165,17 +168,6 @@ def post_data(user_id, topic_name, query_value, time_point):
             return logger.error("There is already an entry initiated with the same user_id")
 
     elif topic_name in inc_list: #covers incremental update of all topics in inc_list
-        #first, checking whether it is 0 or not.
-        if "app_rem" in topic_name:
-            filter1 = {'user_id': user_id, "app_rem_startdate": 0}
-            update1 = {'$set': {"app_rem_startdate": time_point}}
-            try:
-                result = collection.update_one(filter1, update1)
-                result_logger(result)
-                
-            except Exception as e:
-                return logger.error("Error: %s", e)
-
         filter2 = {'user_id': user_id}
         update2 = {'$inc': {topic_name: 1}} #incrementally updates by 1
         try:
@@ -185,25 +177,30 @@ def post_data(user_id, topic_name, query_value, time_point):
         except Exception as e:
             return logger.error("Error: %s", e)
     
-    elif topic_name in med_rem_list: #covers behaviour of medication reminder, except med_rem_count
+    elif topic_name in rem_list: #covers behaviour of reminder start dates
         if topic_name == "med_rem_startdate":
             filter1 = {'user_id': user_id, "med_rem_startdate": 0}
             update1 = {'$set': {"med_rem_startdate": time_point}}
             try:
                 result = collection.update_one(filter1, update1)
-                result_logger(result)
+                result_logger(result)        
 
             except Exception as e:
                 return logger.error("Error: %s", e)
-        else:
-            filter2 = {'user_id': user_id}
-            update2 = {'$inc': {topic_name: 1}} #incrementally updates by 1
+
+        elif topic_name == "app_rem_startdate":
+            filter1 = {'user_id': user_id, "app_rem_startdate": 0}
+            update1 = {'$set': {"app_rem_startdate": time_point}}
             try:
-                result = collection.update_one(filter2, update2)
+                result = collection.update_one(filter1, update1)
                 result_logger(result)
-    
+                
             except Exception as e:
                 return logger.error("Error: %s", e)
+
+        else:
+            return logger.info("Error: No such topic name available")
+
 
     elif topic_name in module_list: #covers all modules, updates status "initiated", "completed", "declined", 
         filter2 = {'user_id': user_id}
@@ -218,6 +215,7 @@ def post_data(user_id, topic_name, query_value, time_point):
     
     else:
         return "an error occured, please try again later"
+
 
 def get_entry(user_id):
     filter = {'user_id': user_id}
