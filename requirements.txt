@@ -8,3 +8,4 @@ arrow
 scheduler
 icalendar
 cryptography
+azure-cosmos

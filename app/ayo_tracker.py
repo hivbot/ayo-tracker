@@ -201,18 +201,50 @@ def post_data(user_id, topic_name, query_value, time_point):
         else:
             return logger.info("Error: No such topic name available")
 
-
     elif topic_name in module_list: #covers all modules, updates status "initiated", "completed", "declined", 
         filter2 = {'user_id': user_id}
-        update2 = {'$set': {topic_name: query_value}} #sets the module to the status (query_value)
+        result_actual = collection.find_one(filter2,{topic_name})
+        if result_actual[topic_name] != "completed": #only changes if it is Status is not "completed"
+            update2 = {'$set': {topic_name: query_value}} #sets the module to the status (query_value)
 
+            try:
+                result = collection.update_one(filter2, update2)
+                result_logger(result)
+
+            except Exception as e:
+                return logger.error("Error: %s", e)
+
+    
+    elif topic_name == 'question_bucket':
+        filter3 = {'user_id': user_id}
         try:
-            result = collection.update_one(filter2, update2)
-            result_logger(result)
+            res = collection.find_one(filter3)
 
         except Exception as e:
-            return logger.error("Error: %s", e)
-    
+            print(f"An error occurred: {e}")
+
+        if res == None:
+
+            data = {
+                "user_id": user_id,
+                "question_list": [query_value,],
+                }
+        
+            try:
+                result = collection.insert_one(data)
+                return logger.info("Data inserted with _id: {}".format(result.inserted_id))
+                    
+            except Exception as e:
+                return logger.error(f"An error occurred: {e}")
+
+        else: #if it already exists
+            try:
+                result = collection.update_one(filter3, {'$push': {'question_list': query_value}})
+                return logger.info("Updated existing question list: {}".format(result.raw_result))
+                    
+            except Exception as e:
+                return logger.error(f"An error occurred: {e}")
+
     else:
         return "an error occured, please try again later"
 
