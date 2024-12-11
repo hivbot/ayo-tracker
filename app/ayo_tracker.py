@@ -97,10 +97,10 @@ collection = db['tracking']
 
 inc_list = ["faq_question", "faq_rephrase", "faq_threshold", "faq_confirmation_yes", "faq_confirmation_no",
             "faq_satisfaction_yes", "faq_satisfaction_no", "app_rem_count", "med_rem_count", "med_rem_yes", "med_rem_remind"]
-rem_list = ["med_rem_startdate", "app_rem_startdate"]
+rem_list = ["med_rem_startdate", "med_rem_enddate", "app_rem_startdate", "app_rem_enddate"]
 module_list = ["adherence","drug_use_storage","drugs_and_side_effects","sex_h", "hiv_myth",
             "stigmatisation", "jewel_story", "support_group_purpose", "disclosure_general", "disclosure_spouse",
-            "hiv_basics", "stress_management", "menstruation"]
+            "hiv_basics", "stress_management", "menstruation", "last_conversation"]
 
 
 def result_logger(res):
@@ -130,6 +130,7 @@ def post_data(user_id, topic_name, query_value, time_point):
                 "user_id": user_id,
                 "general_startdate": time_point,
                 "general_nickname": query_value,
+                "last_conversation": 0,
                 "faq_question": 0,
                 "faq_confirmation_yes": 0,
                 "faq_confirmation_no": 0,
@@ -137,9 +138,10 @@ def post_data(user_id, topic_name, query_value, time_point):
                 "faq_satisfaction_no": 0,
                 "faq_rephrase": 0,
                 "faq_threshold": 0,
-                "app_rem_startdate": 0,
+                "app_rem_startdate": [],
                 "app_rem_count": 0,
-                "med_rem_startdate": 0,
+                "med_rem_startdate": [],
+                "med_rem_enddate": [],
                 "med_rem_count": 0,
                 "med_rem_yes": 0,
                 "med_rem_remind": 0,
@@ -177,29 +179,16 @@ def post_data(user_id, topic_name, query_value, time_point):
         except Exception as e:
             return logger.error("Error: %s", e)
     
-    elif topic_name in rem_list: #covers behaviour of reminder start dates
-        if topic_name == "med_rem_startdate":
-            filter1 = {'user_id': user_id, "med_rem_startdate": 0}
-            update1 = {'$set': {"med_rem_startdate": time_point}}
-            try:
-                result = collection.update_one(filter1, update1)
-                result_logger(result)        
+    elif topic_name in rem_list: #covers behaviour of reminder start and end dates
+        filter1 = {'user_id': user_id}
+        update1 = {'$push':{topic_name: time_point}}
 
-            except Exception as e:
-                return logger.error("Error: %s", e)
+        try:
+            result = collection.update_one(filter1,update1)
+            result_logger(result)
+        except Exception as e:
+            logger.error("Error: %s", e)
 
-        elif topic_name == "app_rem_startdate":
-            filter1 = {'user_id': user_id, "app_rem_startdate": 0}
-            update1 = {'$set': {"app_rem_startdate": time_point}}
-            try:
-                result = collection.update_one(filter1, update1)
-                result_logger(result)
-                
-            except Exception as e:
-                return logger.error("Error: %s", e)
-
-        else:
-            return logger.info("Error: No such topic name available")
 
     elif topic_name in module_list: #covers all modules, updates status "initiated", "completed", "declined", 
         filter2 = {'user_id': user_id}
