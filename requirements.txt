@@ -9,3 +9,4 @@ scheduler
 icalendar
 cryptography
 azure-cosmos
+pytz
