@@ -100,7 +100,7 @@ inc_list = ["faq_question", "faq_rephrase", "faq_threshold", "faq_confirmation_y
 rem_list = ["med_rem_startdate", "med_rem_enddate", "app_rem_startdate", "app_rem_enddate"]
 module_list = ["adherence","drug_use_storage","drugs_and_side_effects","sex_h", "hiv_myth",
             "stigmatisation", "jewel_story", "support_group_purpose", "disclosure_general", "disclosure_spouse",
-            "hiv_basics", "stress_management", "menstruation", "last_conversation"]
+            "hiv_basics", "stress_management", "menstruation"]
 
 
 def result_logger(res):
@@ -130,7 +130,7 @@ def post_data(user_id, topic_name, query_value, time_point):
                 "user_id": user_id,
                 "general_startdate": time_point,
                 "general_nickname": query_value,
-                "last_conversation": 0,
+                "last_conversation": [],
                 "faq_question": 0,
                 "faq_confirmation_yes": 0,
                 "faq_confirmation_no": 0,
@@ -180,6 +180,7 @@ def post_data(user_id, topic_name, query_value, time_point):
             return logger.error("Error: %s", e)
     
     elif topic_name in rem_list: #covers behaviour of reminder start and end dates
+
         filter1 = {'user_id': user_id}
         update1 = {'$push':{topic_name: time_point}}
 
@@ -234,8 +235,23 @@ def post_data(user_id, topic_name, query_value, time_point):
             except Exception as e:
                 return logger.error(f"An error occurred: {e}")
 
+    elif topic_name == "last_conversation":
+        date_only = query_value.split('T')[0]
+        try:
+            user_data = collection.find_one({"user_id": user_id})
+            if user_data:
+                last_conversation = user_data.get("last_conversation", [])
+                if date_only not in last_conversation:
+                    collection.update_one(
+                        {"user_id": user_id},
+                        {"$push": {"last_conversation": date_only}}
+                    )
+                    return logger.info(f"Date {date_only} added to last_conversation.")
+        except Exception as e:
+            return logger.error(f"An error occurred during date insertion: {e}")
+
     else:
-        return "an error occured, please try again later"
+        return logger.error("an error occured, please try again later")
 
 
 def get_entry(user_id):
