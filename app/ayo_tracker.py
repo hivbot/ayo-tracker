@@ -92,6 +92,8 @@ db = client['Ayo']
 
 # Select the collection
 collection = db['tracking']
+question_collection = db['question_bucket']
+
 
 # List of all items that incrementally update
 
@@ -157,7 +159,8 @@ def post_data(user_id, topic_name, query_value, time_point):
                 "disclosure_spouse": "not_started",
                 "hiv_basics": "not_started",
                 "stress_management": "not_started",
-                "menstruation": "not_started"
+                "menstruation": "not_started",
+                "feeling": []
             }
             
             try:
@@ -208,20 +211,19 @@ def post_data(user_id, topic_name, query_value, time_point):
     elif topic_name == 'question_bucket':
         filter3 = {'user_id': user_id}
         try:
-            res = collection.find_one(filter3)
+            res = question_collection.find_one(filter3)
 
         except Exception as e:
             print(f"An error occurred: {e}")
 
         if res == None:
-
             data = {
                 "user_id": user_id,
                 "question_list": [query_value,],
                 }
         
             try:
-                result = collection.insert_one(data)
+                result = question_collection.insert_one(data)
                 return logger.info("Data inserted with _id: {}".format(result.inserted_id))
                     
             except Exception as e:
@@ -229,7 +231,7 @@ def post_data(user_id, topic_name, query_value, time_point):
 
         else: #if it already exists
             try:
-                result = collection.update_one(filter3, {'$push': {'question_list': query_value}})
+                result = question_collection.update_one(filter3, {'$push': {'question_list': query_value}})
                 return logger.info("Updated existing question list: {}".format(result.raw_result))
                     
             except Exception as e:
@@ -249,6 +251,18 @@ def post_data(user_id, topic_name, query_value, time_point):
                     return logger.info(f"Date {date_only} added to last_conversation.")
         except Exception as e:
             return logger.error(f"An error occurred during date insertion: {e}")
+
+    elif topic_name == "feeling":
+        feeling = {"timestamp": time_point, "feeling": query_value}
+        try:
+            user_data = collection.find_one({"user_id": user_id})
+            if user_data:
+                collection.update_one(
+                    {"user_id": user_id},
+                    {"$push": {"feeling": feeling}}
+                )
+        except Exception as e:
+            return logger.error(f"An error occurred during feeling insertion: {e}")
 
     else:
         return logger.error("an error occured, please try again later")
