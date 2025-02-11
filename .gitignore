@@ -36,6 +36,9 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
+# workflows
+.github/workflows/
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
