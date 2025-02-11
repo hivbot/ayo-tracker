@@ -27,6 +27,7 @@ class TrackerInput(BaseInput):
     topic_name: str
     query_value: Optional[str] = None
     time_point: Optional[str] = None
+    bucket: Optional[dict] = None
 
 
 @app.post("/v1")
@@ -36,7 +37,9 @@ async def post_tracker(tracker_input: TrackerInput):
         topic_name = tracker_input.topic_name
         time_point = tracker_input.time_point
         query_value = tracker_input.query_value
-        
+        bucket = tracker_input.bucket
+        if bucket and query_value == None:
+            query_value = bucket
         logger.info("Received scheduler post request:")
         logger.info("user_id: %s", user_id)
         logger.info("intent_name: %s", topic_name)
